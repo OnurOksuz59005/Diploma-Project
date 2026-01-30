@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Personal Finance Tracker{% endblock %}</title>
+    {% csrf_token %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #e2e8f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(15, 23, 42, 0.95) !important;
+            border-bottom: 2px solid var(--primary-color);
+            backdrop-filter: blur(10px);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+        
+        .nav-link {
+            color: var(--text-light) !important;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.2);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            border: none;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            border: none;
+        }
+        
+        .form-control, .form-select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            color: #ffffff;
+            border-radius: 8px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: var(--primary-color);
+            color: #ffffff;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        
+        .form-select option {
+            background: #1e293b;
+            color: #ffffff;
+        }
+        
+        .form-select option:checked {
+            background: var(--primary-color);
+            color: #ffffff;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(226, 232, 240, 0.5);
+        }
+        
+        .form-label {
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .form-text {
+            color: rgba(226, 232, 240, 0.8);
+        }
+        
+        label {
+            color: #ffffff;
+        }
+        
+        .card-title {
+            color: #ffffff;
+        }
+        
+        .card-text {
+            color: rgba(226, 232, 240, 0.9);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            color: #ffffff;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(226, 232, 240, 0.7);
+            margin-top: 5px;
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning-color);
+            color: var(--text-light);
+        }
+        
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger-color);
+            color: var(--text-light);
+        }
+        
+        .table {
+            color: #ffffff;
+            background: transparent;
+        }
+        
+        .table thead {
+            border-bottom: 2px solid var(--primary-color);
+            background: rgba(37, 99, 235, 0.4) !important;
+        }
+        
+        .table thead th {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            background: rgba(37, 99, 235, 0.4) !important;
+            border: none;
+        }
+        
+        .table tbody {
+            background: transparent;
+        }
+        
+        .table tbody tr {
+            border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+            transition: all 0.3s ease;
+            background: transparent !important;
+        }
+        
+        .table tbody tr td {
+            color: #ffffff !important;
+            font-weight: 500;
+            background: transparent !important;
+            border-color: rgba(37, 99, 235, 0.1);
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(37, 99, 235, 0.15) !important;
+        }
+        
+        .table td {
+            color: #ffffff !important;
+            background: transparent !important;
+        }
+        
+        .table th {
+            color: #ffffff !important;
+            background: rgba(37, 99, 235, 0.4) !important;
+        }
+        
+        .table-hover tbody tr:hover {
+            background: rgba(37, 99, 235, 0.15) !important;
+        }
+        
+        .badge-income {
+            background: var(--success-color);
+            color: #ffffff;
+        }
+        
+        .badge-expense {
+            background: var(--danger-color);
+            color: #ffffff;
+        }
+        
+        .container-main {
+            padding: 30px 0;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: var(--text-light);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner-border {
+            color: var(--primary-color);
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            color: #ffffff;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+            color: #ffffff;
+        }
+        
+        .modal-title {
+            color: #ffffff;
+        }
+        
+        .modal-body {
+            color: #ffffff;
+        }
+        
+        .btn-close {
+            filter: invert(1);
+        }
+        
+        .dropdown-menu {
+            background: var(--card-bg);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+        }
+        
+        .dropdown-item {
+            color: #ffffff;
+        }
+        
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background: rgba(37, 99, 235, 0.2);
+            color: #ffffff;
+        }
+        
+        .nav-tabs .nav-link {
+            color: rgba(226, 232, 240, 0.7);
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: #ffffff;
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .progress {
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+        
+        .progress-bar {
+            background-color: var(--primary-color);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-wallet"></i> FinanceTracker
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item" id="authLinks" style="display: none;">
+                        <a class="nav-link" href="/dashboard/">Dashboard</a>
+                    </li>
+                    <li class="nav-item" id="authLinks" style="display: none;">
+                        <a class="nav-link" href="/transactions/">Transactions</a>
+                    </li>
+                    <li class="nav-item" id="authLinks" style="display: none;">
+                        <a class="nav-link" href="/budgets/">Budgets</a>
+                    </li>
+                    <li class="nav-item" id="authLinks" style="display: none;">
+                        <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                    </li>
+                    <li class="nav-item" id="guestLinks">
+                        <a class="nav-link" href="/login/">Login</a>
+                    </li>
+                    <li class="nav-item" id="guestLinks">
+                        <a class="nav-link" href="/register/">Register</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid container-main">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script>
+        const API_BASE = '/api';
+        
+        function getAuthToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        }
+        
+        function checkAuthStatus() {
+            fetch('/api/auth/profile/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // User is authenticated
+                    document.querySelectorAll('#authLinks').forEach(el => el.style.display = '');
+                    document.querySelectorAll('#guestLinks').forEach(el => el.style.display = 'none');
+                } else {
+                    // User is not authenticated
+                    document.querySelectorAll('#authLinks').forEach(el => el.style.display = 'none');
+                    document.querySelectorAll('#guestLinks').forEach(el => el.style.display = '');
+                }
+            })
+            .catch(() => {
+                // Error checking auth, show guest links
+                document.querySelectorAll('#authLinks').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('#guestLinks').forEach(el => el.style.display = '');
+            });
+        }
+        
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                fetch('/api/auth/logout/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getAuthToken()
+                    }
+                }).then(() => {
+                    window.location.href = '/login/';
+                });
+            }
+        }
+        
+        function showLoading(element) {
+            element.innerHTML = '<div class="loading"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        }
+        
+        function showError(message) {
+            alert('Error: ' + message);
+        }
+        
+        // Check authentication status on page load
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

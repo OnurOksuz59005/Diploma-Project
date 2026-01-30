@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Personal Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="section-title">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </h1>
+        </div>
+    </div>
+
+    <div class="row mb-4" id="statsContainer">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value" id="totalIncome">$0.00</div>
+                <div class="stat-label">Total Income</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value" id="totalExpenses" style="color: var(--danger-color);">$0.00</div>
+                <div class="stat-label">Total Expenses</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value" id="balance">$0.00</div>
+                <div class="stat-label">Balance</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-value" id="alertCount">0</div>
+                <div class="stat-label">Budget Alerts</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header" style="border-bottom: 2px solid var(--primary-color); padding: 20px;">
+                    <h5 class="mb-0" style="color: #ffffff;">
+                        <i class="fas fa-chart-pie"></i> Expenses by Category
+                    </h5>
+                </div>
+                <div class="card-body" style="position: relative; height: 300px;">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header" style="border-bottom: 2px solid var(--primary-color); padding: 20px;">
+                    <h5 class="mb-0" style="color: #ffffff;">
+                        <i class="fas fa-bell"></i> Recent Alerts
+                    </h5>
+                </div>
+                <div class="card-body" id="alertsContainer">
+                    <p style="color: rgba(226, 232, 240, 0.5);">No alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="border-bottom: 2px solid var(--primary-color); padding: 20px;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" style="color: #ffffff;">
+                            <i class="fas fa-list"></i> Recent Transactions
+                        </h5>
+                        <a href="/transactions/" class="btn btn-sm btn-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" id="transactionsContainer">
+                        <p style="color: rgba(226, 232, 240, 0.5);">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let expenseChart = null;
+
+async function loadDashboard() {
+    try {
+        const statsResponse = await fetch('/api/dashboard/stats/');
+        const stats = await statsResponse.json();
+        
+        document.getElementById('totalIncome').textContent = '$' + parseFloat(stats.total_income).toFixed(2);
+        document.getElementById('totalExpenses').textContent = '$' + parseFloat(stats.total_expenses).toFixed(2);
+        document.getElementById('balance').textContent = '$' + parseFloat(stats.balance).toFixed(2);
+        document.getElementById('alertCount').textContent = stats.budget_alerts_count;
+        
+        const chartResponse = await fetch('/api/dashboard/chart_data/');
+        const chartData = await chartResponse.json();
+        
+        updateExpenseChart(chartData.expenses_by_category);
+        
+        const alertsResponse = await fetch('/api/alerts/unread/');
+        const alerts = await alertsResponse.json();
+        
+        loadAlerts(alerts);
+        
+        const transactionsResponse = await fetch('/api/transactions/');
+        const transactions = await transactionsResponse.json();
+        
+        loadRecentTransactions(transactions.slice(0, 5));
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+    }
+}
+
+function updateExpenseChart(data) {
+    const ctx = document.getElementById('expenseChart').getContext('2d');
+    
+    if (expenseChart) {
+        expenseChart.destroy();
+    }
+    
+    const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6'];
+    
+    expenseChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(data),
+            datasets: [{
+                data: Object.values(data),
+                backgroundColor: colors,
+                borderColor: '#1e293b',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#ffffff',
+                        padding: 20,
+                        font: { size: 14, weight: 'bold' },
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            return data.labels.map((label, i) => ({
+                                text: label + ': $' + data.datasets[0].data[i].toFixed(2),
+                                fillStyle: data.datasets[0].backgroundColor[i],
+                                hidden: false,
+                                index: i
+                            }));
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': $' + context.parsed.y.toFixed(2);
+                        }
+                    },
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 13 }
+                }
+            }
+        }
+    });
+}
+
+function loadAlerts(alerts) {
+    const container = document.getElementById('alertsContainer');
+    
+    if (alerts.length === 0) {
+        container.innerHTML = '<p style="color: rgba(226, 232, 240, 0.5);">No alerts</p>';
+        return;
+    }
+    
+    container.innerHTML = alerts.map(alert => `
+        <div class="alert ${alert.alert_type === 'critical' ? 'alert-danger' : 'alert-warning'} mb-2">
+            <strong>${alert.budget_category}</strong><br>
+            <small>${alert.percentage.toFixed(1)}% of budget used</small>
+        </div>
+    `).join('');
+}
+
+function loadRecentTransactions(transactions) {
+    const container = document.getElementById('transactionsContainer');
+    
+    if (transactions.length === 0) {
+        container.innerHTML = '<p style="color: rgba(226, 232, 240, 0.5);">No transactions</p>';
+        return;
+    }
+    
+    const html = `
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${transactions.map(t => `
+                    <tr>
+                        <td>${new Date(t.date).toLocaleDateString()}</td>
+                        <td>${t.category}</td>
+                        <td><span class="badge badge-${t.type}">${t.type}</span></td>
+                        <td style="color: ${t.type === 'income' ? 'var(--success-color)' : 'var(--danger-color)'};">
+                            ${t.type === 'income' ? '+' : '-'}$${parseFloat(t.amount).toFixed(2)}
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    
+    container.innerHTML = html;
+}
+
+loadDashboard();
+setInterval(loadDashboard, 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Personal Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center" style="min-height: 80vh;">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4" style="color: #ffffff;">
+                Take Control of Your Finances
+            </h1>
+            <p class="lead mb-4" style="color: #ffffff;">
+                Track your income and expenses, set budgets, and get smart suggestions to improve your financial habits.
+            </p>
+            <div class="d-flex gap-3">
+                <a href="/login/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="/register/" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0" style="background: rgba(37, 99, 235, 0.1);">
+                <div class="card-body p-5">
+                    <div class="text-center">
+                        <i class="fas fa-chart-pie" style="font-size: 5rem; color: var(--primary-color); opacity: 0.8;"></i>
+                        <h3 class="mt-4" style="color: #ffffff;">Smart Finance Management</h3>
+                        <p style="color: #ffffff;">
+                            Visualize your spending patterns and receive intelligent budgeting recommendations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 pt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                    <h5 class="card-title mt-3" style="color: #ffffff;">Secure & Private</h5>
+                    <p class="card-text" style="color: #ffffff;">Your financial data is encrypted and stored securely.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line" style="font-size: 2.5rem; color: var(--success-color);"></i>
+                    <h5 class="card-title mt-3" style="color: #ffffff;">Track & Analyze</h5>
+                    <p class="card-text" style="color: #ffffff;">Monitor your spending with detailed analytics and charts.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-lightbulb" style="font-size: 2.5rem; color: var(--warning-color);"></i>
+                    <h5 class="card-title mt-3" style="color: #ffffff;">Smart Suggestions</h5>
+                    <p class="card-text" style="color: #ffffff;">Get intelligent recommendations to optimize your budget.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

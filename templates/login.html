@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Personal Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center" style="min-height: 80vh; align-items: center;">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-center mb-4" style="color: #ffffff;">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </h2>
+                    
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label" style="color: #ffffff;">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label" style="color: #ffffff;">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </form>
+                    
+                    <hr style="border-color: rgba(226, 232, 240, 0.2);">
+                    
+                    <p class="text-center mb-0" style="color: #ffffff;">
+                        Don't have an account? 
+                        <a href="/register/" style="color: var(--primary-color);">Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    try {
+        const response = await fetch('/api/auth/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getAuthToken()
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        if (response.ok) {
+            window.location.href = '/dashboard/';
+        } else {
+            showError('Invalid username or password');
+        }
+    } catch (error) {
+        showError(error.message);
+    }
+});
+</script>
+{% endblock %}

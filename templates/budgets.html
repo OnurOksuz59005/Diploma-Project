@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Budgets - Personal Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="section-title">
+                <i class="fas fa-piggy-bank"></i> Budgets
+            </h1>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div id="budgetsContainer">
+                <p style="color: rgba(226, 232, 240, 0.5);">Loading budgets...</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header" style="border-bottom: 2px solid var(--primary-color); padding: 20px;">
+                    <h5 class="mb-0" style="color: #ffffff;">
+                        <i class="fas fa-plus-circle"></i> Create Budget
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="budgetForm">
+                        <div class="mb-3">
+                            <label for="budgetCategory" class="form-label" style="color: #ffffff;">Category</label>
+                            <select class="form-select" id="budgetCategory" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="food">Food & Dining</option>
+                                <option value="transport">Transport</option>
+                                <option value="utilities">Utilities</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="health">Health & Fitness</option>
+                                <option value="education">Education</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="budgetLimit" class="form-label" style="color: #ffffff;">Monthly Limit ($)</label>
+                            <input type="number" class="form-control" id="budgetLimit" name="limit" step="0.01" min="0" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="budgetMonth" class="form-label" style="color: #ffffff;">Month</label>
+                            <input type="number" class="form-control" id="budgetMonth" name="month" min="1" max="12" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="budgetYear" class="form-label" style="color: #ffffff;">Year</label>
+                            <input type="number" class="form-control" id="budgetYear" name="year" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Create Budget
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const now = new Date();
+document.getElementById('budgetMonth').value = now.getMonth() + 1;
+document.getElementById('budgetYear').value = now.getFullYear();
+
+document.getElementById('budgetForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        category: document.getElementById('budgetCategory').value,
+        limit: document.getElementById('budgetLimit').value,
+        month: parseInt(document.getElementById('budgetMonth').value),
+        year: parseInt(document.getElementById('budgetYear').value)
+    };
+    
+    try {
+        const response = await fetch('/api/budgets/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getAuthToken()
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            document.getElementById('budgetForm').reset();
+            document.getElementById('budgetMonth').value = now.getMonth() + 1;
+            document.getElementById('budgetYear').value = now.getFullYear();
+            loadBudgets();
+            alert('Budget created successfully!');
+        } else {
+            showError('Failed to create budget');
+        }
+    } catch (error) {
+        showError(error.message);
+    }
+});
+
+async function loadBudgets() {
+    try {
+        const response = await fetch('/api/budgets/current_month/');
+        const budgets = await response.json();
+        
+        const container = document.getElementById('budgetsContainer');
+        
+        if (budgets.length === 0) {
+            container.innerHTML = '<p style="color: rgba(226, 232, 240, 0.5);">No budgets for this month</p>';
+            return;
+        }
+        
+        container.innerHTML = budgets.map(budget => {
+            const percentage = budget.percentage_used;
+            const statusColor = percentage >= 90 ? 'var(--danger-color)' : percentage >= 75 ? 'var(--warning-color)' : 'var(--success-color)';
+            
+            return `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="card-title mb-0">${budget.category}</h5>
+                            <button class="btn btn-sm btn-danger" onclick="deleteBudget(${budget.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>$${parseFloat(budget.spent_amount).toFixed(2)} / $${parseFloat(budget.limit).toFixed(2)}</span>
+                                <span style="color: ${statusColor}; font-weight: bold;">${percentage.toFixed(1)}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" style="width: ${Math.min(percentage, 100)}%; background: ${statusColor};" role="progressbar"></div>
+                            </div>
+                        </div>
+                        
+                        ${percentage >= 90 ? `
+                            <div class="alert alert-danger mb-0" style="font-size: 0.9rem;">
+                                <i class="fas fa-exclamation-circle"></i> Budget limit exceeded!
+                            </div>
+                        ` : percentage >= 75 ? `
+                            <div class="alert alert-warning mb-0" style="font-size: 0.9rem;">
+                                <i class="fas fa-exclamation-triangle"></i> Approaching budget limit
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading budgets:', error);
+    }
+}
+
+async function deleteBudget(id) {
+    if (confirm('Are you sure you want to delete this budget?')) {
+        try {
+            const response = await fetch(`/api/budgets/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getAuthToken()
+                }
+            });
+            
+            if (response.ok) {
+                loadBudgets();
+            } else {
+                showError('Failed to delete budget');
+            }
+        } catch (error) {
+            showError(error.message);
+        }
+    }
+}
+
+loadBudgets();
+</script>
+{% endblock %}
