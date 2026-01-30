@@ -9,12 +9,21 @@ from .serializers import UserSerializer
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_view(request):
-    username = request.data.get('username')
-    email = request.data.get('email')
-    password = request.data.get('password')
+    username = request.data.get('username', '').strip()
+    email = request.data.get('email', '').strip()
+    password = request.data.get('password', '').strip()
     
     if not username or not email or not password:
-        return Response({'error': 'Missing required fields'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Username, email, and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if len(username) < 3:
+        return Response({'error': 'Username must be at least 3 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if len(password) < 8:
+        return Response({'error': 'Password must be at least 8 characters long'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if '@' not in email or '.' not in email:
+        return Response({'error': 'Please provide a valid email address'}, status=status.HTTP_400_BAD_REQUEST)
     
     if User.objects.filter(username=username).exists():
         return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)

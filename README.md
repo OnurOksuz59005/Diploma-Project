@@ -57,26 +57,74 @@ Diploma Project/
 ### Prerequisites
 - Python 3.11+
 - pip (Python package manager)
+- Virtual environment (venv)
 
-### Steps
+### Quick Start (Windows)
 
-1. **Clone/Navigate to project directory**
+Run the automated setup script:
 ```bash
-cd "c:\Users\iniro\Desktop\Vizja Projects\Diploma Project"
+setup.bat
+```
+
+Then start the server:
+```bash
+run_server.bat
+```
+
+### Quick Start (Linux/macOS)
+
+Run the automated setup script:
+```bash
+bash setup.sh
+```
+
+Then start the server:
+```bash
+python manage.py runserver
+```
+
+### Manual Setup
+
+1. **Navigate to project directory**
+```bash
+cd "Diploma Project"
 ```
 
 2. **Create virtual environment**
 ```bash
 python -m venv venv
+```
+
+3. **Activate virtual environment**
+
+**Windows:**
+```bash
 venv\Scripts\activate
 ```
 
-3. **Install dependencies**
+**Linux/macOS:**
+```bash
+source venv/bin/activate
+```
+
+4. **Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Run migrations**
+5. **Create .env file**
+```bash
+cp .env.example .env
+```
+
+6. **Configure environment variables** (edit .env file)
+```
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1
+```
+
+7. **Run migrations**
 ```bash
 python manage.py migrate
 ```
